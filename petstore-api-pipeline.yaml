@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+WSTemplateFormatVersion: "2010-09-09"
 Description: Code pipeline for automated api functional testing
 
 Parameters:
@@ -132,8 +132,8 @@ Resources:
             - "s3:GetObjectVersion"
             - "s3:ListBucket"
             Resource:
-            - Fn::Sub: arn:aws:s3:::${AWS::StackName}-unique-api-project-bucket-${AWS::AccountId}/*
-            - Fn::Sub: arn:aws:s3:::${AWS::StackName}-unique-api-project-bucket-${AWS::AccountId}
+            - Fn::Sub: arn:aws:s3:::${AWS::StackName}-codepipeline-artifact-bucket-${AWS::AccountId}/*
+            - Fn::Sub: arn:aws:s3:::${AWS::StackName}-codepipeline-artifact-bucket-${AWS::AccountId}
             - Fn::Sub: arn:aws:s3:::${BucketRoot}/*
             - Fn::Sub: arn:aws:s3:::${BucketRoot}
           -
@@ -160,20 +160,20 @@ Resources:
             Service:
             - cloudformation.amazonaws.com
 
-  uniqueapiprojectbucket:
+  CodePipelineArtifactBucket:
     DeletionPolicy: Delete
     Type: 'AWS::S3::Bucket'
     Description: S3 bucket for pipeline artifacts
     Properties:
       AccessControl: Private
       BucketName:
-        Fn::Sub: ${AWS::StackName}-unique-api-project-bucket-${AWS::AccountId}
+        Fn::Sub: ${AWS::StackName}-codepipeline-artifact-bucket-${AWS::AccountId}
       VersioningConfiguration:
         Status: Enabled
       Tags:
       - Key: Name
         Value:
-          Fn::Sub: ${AWS::StackName}-unique-api-project-bucket
+          Fn::Sub: ${AWS::StackName}-codepipeline-artifact-bucket
 
   #code build - api deployment using SAM (see buildspec.yml)
   PetStoreAPISAMCodeBuildProject:
@@ -186,7 +186,7 @@ Resources:
       Artifacts:
         Type: S3
         Location:
-          Ref: uniqueapiprojectbucket
+          Ref: CodePipelineArtifactBucket
         Name:
           Fn::Sub: ${AWS::StackName}-petstore-api-stack-codebuild-project
       Environment:
@@ -220,7 +220,7 @@ Resources:
       Artifacts:
         Type: S3
         Location:
-          Ref: uniqueapiprojectbucket
+          Ref: CodePipelineArtifactBucket
         Name:
           Fn::Sub: ${AWS::StackName}-newman-project
       Environment:
@@ -258,7 +258,7 @@ Resources:
         Fn::GetAtt: [ CodePipelineTrustRole, Arn ]
       ArtifactStore:
         Type: S3
-        Location: !Ref uniqueapiprojectbucket
+        Location: !Ref CodePipelineArtifactBucket
       Stages:
       - Name: Source
         Actions:
